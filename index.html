@@ -33,7 +33,19 @@
         }
         .wave { width: 3px; background: var(--btn-orange); border-radius: 3px; animation: wave-anim 0.5s infinite ease-in-out; }
         @keyframes wave-anim { 0%, 100% { height: 5px; } 50% { height: 15px; } }
-        /* --------------------------- */
+
+        /* Hiệu ứng rung lắc khi chọn sai */
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-8px); }
+            50% { transform: translateX(8px); }
+            75% { transform: translateX(-4px); }
+        }
+        .shake-anim {
+            animation: shake 0.4s cubic-bezier(.36,.07,.19,.97) both;
+            border-color: var(--danger) !important;
+            box-shadow: 0 0 15px rgba(220, 53, 69, 0.4) !important;
+        }
 
         #warning-overlay {
             display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
@@ -96,7 +108,7 @@
         }
         
         .option-item.correct { background: #d4edda !important; border-color: #28a745 !important; box-shadow: 0 0 15px rgba(40, 167, 69, 0.5); }
-        .option-item.wrong { background: #f8d7da !important; border-color: #dc3545 !important; box-shadow: 0 0 15px rgba(220, 53, 69, 0.5); }
+        .option-item.wrong { background: #f8d7da !important; border-color: #dc3545 !important; }
 
         #result-screen { display: none; position: fixed; top:0; left:0; width:100%; height:100%; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); z-index: 9999; justify-content: center; align-items: center; padding: 20px; }
         .result-card { background: white; width: 100%; max-width: 450px; border-radius: 24px; padding: 30px; text-align: center; box-shadow: 0 20px 40px rgba(0,0,0,0.2); }
@@ -202,20 +214,17 @@
 
 <script>
     const BASE_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTD6ZzPWBa0HG24Av-JimMPQg3HTJklLOk89QogsshduBPsvz4xW0Qni82sRJQjuhqxr2E0OLMira03/pub?output=csv&gid=";
-    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxkf6siza_yw1Sf7Ig5LJBepqqNih4oGU18BTkbffFWwMAcsOVSrmmob-Koh2UjVaW-OQ/exec";
+    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwPZcfmY2PerVxTKwq0w_EMCx1bsnDKFT4yc9lHw_GhJMXJuuNcOl5jmO0kr92B_Kkw/exec";
     
     let allQuestions = [], selectedQuestions = [], studentAnswers = [];
     let currentQuestionIndex = 0, timeLeft = 1200, timerInterval, isSubmitted = false, cheatCount = 0;
 
-    // --- CẤU HÌNH TRỢ LÝ GIỌNG NÓI ---
     const synth = window.speechSynthesis;
     function aiSpeak(text) {
-        // Luôn hủy giọng nói cũ trước khi nói mới
         synth.cancel();
-        
         const utter = new SpeechSynthesisUtterance(text);
         utter.lang = 'vi-VN';
-        utter.rate = 1.1; // Tốc độ nói
+        utter.rate = 1.1;
         
         utter.onstart = () => {
             document.getElementById('ai-waves').style.display = 'flex';
@@ -225,7 +234,6 @@
             document.getElementById('ai-waves').style.display = 'none';
             document.getElementById('ai-status').innerText = 'Sẵn sàng.';
         };
-        
         synth.speak(utter);
     }
 
@@ -275,7 +283,7 @@
         
         document.getElementById('start-screen').style.display = 'none';
         document.getElementById('caee-header').style.display = 'flex';
-        document.getElementById('ai-container').style.display = 'flex'; // Hiện AI
+        document.getElementById('ai-container').style.display = 'flex';
         document.getElementById('timer').style.display = 'block';
         document.getElementById('quiz-screen').style.display = 'grid';
         
@@ -285,8 +293,6 @@
 
         showQuestion(0);
         startTimer();
-        
-        // AI Chào mừng
         aiSpeak("Chào mừng học viên " + document.getElementById('studentName').value + ". Chúc bạn hoàn thành tốt bài sát hạch.");
     }
 
@@ -319,11 +325,7 @@
         
         document.getElementById('quiz-content').innerHTML = html;
         renderGrid();
-
-        // AI đọc câu hỏi khi lật trang (nếu chưa chọn đáp án hoặc ở chế độ thi)
-        if (!stored) {
-            aiSpeak("Câu hỏi số " + (idx+1) + ". " + q.question);
-        }
+        if (!stored) aiSpeak("Câu hỏi số " + (idx+1) + ". " + q.question);
     }
 
     function selectAns(qIdx, ans) {
@@ -332,7 +334,6 @@
         if(findIndex > -1) studentAnswers[findIndex].selected = ans;
         else studentAnswers.push({qIndex: qIdx, selected: ans});
         
-        // Nếu là chế độ ôn tập, AI sẽ giải thích ngay
         if (document.getElementById('modeToggle').checked) {
             const q = selectedQuestions[qIdx];
             const labels = ['A', 'B', 'C', 'D'];
@@ -341,12 +342,21 @@
             
             if (userChoiceLabel === q.answer) {
                 aiSpeak("Chính xác! " + q.explanation);
+                showQuestion(qIdx);
             } else {
+                // Hiệu ứng rung khi chọn sai
+                const items = document.querySelectorAll('.option-item');
+                items.forEach(item => {
+                    if(item.innerText.includes(ans)) {
+                        item.classList.add('shake-anim');
+                    }
+                });
                 aiSpeak("Sai rồi. Đáp án đúng là " + q.answer + ". " + q.explanation);
+                setTimeout(() => { showQuestion(qIdx); }, 500);
             }
+        } else {
+            showQuestion(qIdx);
         }
-        
-        showQuestion(qIdx);
     }
 
     function renderGrid() {
@@ -372,16 +382,12 @@
     async function submitQuiz(auto = false) {
         if(!auto && !confirm("Bạn có chắc chắn muốn nộp bài?")) return;
         clearInterval(timerInterval); 
-        synth.cancel(); // Tắt AI khi nộp bài
+        synth.cancel();
         isSubmitted = true;
         
-        const maThiValue = document.getElementById('maThi').value.trim().toUpperCase();
-        const nameValue  = document.getElementById('studentName').value.toUpperCase().trim();
-        const dobValue   = document.getElementById('studentDOB').value.trim();
+        const nameValue = document.getElementById('studentName').value.toUpperCase().trim();
+        const dobValue = document.getElementById('studentDOB').value.trim();
         const khoaThiValue = document.getElementById('khoaThi').value.trim();
-        const rawNghe    = document.getElementById('jobType').options[document.getElementById('jobType').selectedIndex].text;
-        const isOnTap    = document.getElementById('modeToggle').checked;
-        const ngheValue  = "NGHỀ: " + rawNghe + (isOnTap ? " (ÔN TẬP)" : " (THI)");
 
         let score = 0;
         selectedQuestions.forEach((q, i) => {
@@ -390,28 +396,26 @@
             if(ans && labels[q.options.indexOf(ans.selected)] === q.answer) score++;
         });
 
-      const score10 = ((score / 30) * 10).toFixed(1); // Quy đổi thang điểm 10, lấy 1 chữ số thập phân
-    const status = score >= 25 ? "ĐẠT" : "KHÔNG ĐẠT";
+        const score10 = ((score / 30) * 10).toFixed(1); 
+        const status = score >= 25 ? "ĐẠT" : "KHÔNG ĐẠT";
 
-    document.getElementById('res-name').innerText = nameValue;
-    document.getElementById('res-dob').innerText = dobValue;
-    document.getElementById('res-id').innerText = khoaThiValue;
-    document.getElementById('res-score').innerText = score;
+        document.getElementById('res-name').innerText = nameValue;
+        document.getElementById('res-dob').innerText = dobValue;
+        document.getElementById('res-id').innerText = khoaThiValue;
+        document.getElementById('res-score').innerText = score;
 
-    // Thay thế chữ ĐẠT/KHÔNG ĐẠT bằng số điểm hệ 10
-    const badge = document.getElementById('res-badge');
-    badge.innerText = "ĐIỂM HỆ 10: " + score10; 
-    
-    // Vẫn giữ màu sắc để học viên biết trạng thái (Xanh là đậu, Đỏ là trượt)
-    badge.style.backgroundColor = status === "ĐẠT" ? "#28a745" : "#dc3545";
-    // ----------------------------------
+        // Hiển thị điểm hệ 10 chuẩn xác
+        const badge = document.getElementById('res-badge');
+        badge.innerText = "ĐIỂM HỆ 10: " + score10; 
+        badge.style.backgroundColor = status === "ĐẠT" ? "#28a745" : "#dc3545";
+        document.getElementById('result-screen').style.display = 'flex';
 
         const formData = new URLSearchParams();
-        formData.append('maThi', maThiValue);
+        formData.append('maThi', document.getElementById('maThi').value.trim().toUpperCase());
         formData.append('name', nameValue);
         formData.append('birthDate', dobValue);
         formData.append('khoaThi', khoaThiValue);
-        formData.append('ngheName', ngheValue);
+        formData.append('ngheName', document.getElementById('jobType').options[document.getElementById('jobType').selectedIndex].text);
         formData.append('score', score + "/30");
         formData.append('status', status);
         formData.append('viPham', cheatCount);
