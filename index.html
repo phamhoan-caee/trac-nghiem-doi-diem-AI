@@ -224,7 +224,7 @@
         synth.cancel();
         const utter = new SpeechSynthesisUtterance(text);
         utter.lang = 'vi-VN';
-        utter.rate = 1.1;
+        utter.rate = 1.0; // Tốc độ vừa phải để học viên nghe rõ
         
         utter.onstart = () => {
             document.getElementById('ai-waves').style.display = 'flex';
@@ -245,11 +245,13 @@
             download: true, header: true, skipEmptyLines: true,
             complete: function(results) {
                 allQuestions = results.data.filter(i => i.CauHoi).map(i => ({
-                    question: i.CauHoi, options: [i.A, i.B, i.C, i.D].filter(o => o),
+                    question: i.CauHoi, 
+                    options: [i.A, i.B, i.C, i.D].filter(o => o),
                     answer: i.DapAnDung ? i.DapAnDung.trim().toUpperCase() : "",
                     explanation: i.Giaithich || "Thực hiện đúng quy trình an toàn.",
                     image: i["HINH ANH"] || "" 
                 }));
+                console.log("Đã tải " + allQuestions.length + " câu hỏi.");
             }
         });
     }
@@ -272,7 +274,10 @@
             const result = await res.json();
             if(result.isValid) startQuiz();
             else { alert(result.message || "Mã thi không đúng!"); btn.disabled = false; btn.innerText = "VÀO THI NGAY ➔"; }
-        } catch(e) { alert("Lỗi kết nối Server!"); btn.disabled = false; btn.innerText = "VÀO THI NGAY ➔"; }
+        } catch(e) { 
+            alert("Lỗi kết nối Server! Vui lòng kiểm tra lại mã thi."); 
+            btn.disabled = false; btn.innerText = "VÀO THI NGAY ➔"; 
+        }
     }
 
     function startQuiz() {
@@ -293,7 +298,7 @@
 
         showQuestion(0);
         startTimer();
-        aiSpeak("Chào mừng học viên " + document.getElementById('studentName').value + ". Chúc bạn hoàn thành tốt bài thi.");
+        aiSpeak("Chào mừng học viên " + document.getElementById('studentName').value + ". Chúc bạn hoàn thành tốt bài sát hạch.");
     }
 
     function showQuestion(idx) {
@@ -316,7 +321,7 @@
             html += `<div class="option-item ${cls}" onclick="selectAns(${idx}, '${opt.replace(/'/g, "\\'")}')"><b>${labels[i]}.</b>&nbsp;${opt}</div>`;
         });
 
-        if(isPractice && stored) html += `<div style="background:#fff3cd; padding:15px; border-radius:8px; margin-top:10px; font-size:14px; border-left: 5px solid #ffc107;"><b>Giải thích AI:</b> ${q.explanation}</div>`;
+        if(isPractice && stored) html += `<div style="background:#fff3cd; padding:15px; border-radius:8px; margin-top:10px; font-size:14px; border-left: 5px solid #ffc107;"><b>Giải thích:</b> ${q.explanation}</div>`;
         
         html += `<div style="display:flex; justify-content:space-between; margin-top:15px; gap:10px;">
                     <button class="btn-start" style="padding:10px; background:var(--btn-blue);" onclick="showQuestion(${idx-1})" ${idx===0?'disabled':''}>Lùi lại</button>
@@ -325,7 +330,15 @@
         
         document.getElementById('quiz-content').innerHTML = html;
         renderGrid();
-        if (!stored) aiSpeak("Câu hỏi số " + (idx+1) + ". " + q.question);
+
+        // CẢI TIẾN: AI đọc cả câu hỏi và đáp án nếu chưa làm
+        if (!stored) {
+            let textToRead = "Câu hỏi " + (idx+1) + ": " + q.question + ". ";
+            q.options.forEach((opt, i) => {
+                textToRead += "Đáp án " + labels[i] + ": " + opt + ". ";
+            });
+            aiSpeak(textToRead);
+        }
     }
 
     function selectAns(qIdx, ans) {
@@ -334,25 +347,22 @@
         if(findIndex > -1) studentAnswers[findIndex].selected = ans;
         else studentAnswers.push({qIndex: qIdx, selected: ans});
         
+        const q = selectedQuestions[qIdx];
+        const labels = ['A', 'B', 'C', 'D'];
+        const userChoiceIdx = q.options.indexOf(ans);
+        const userChoiceLabel = labels[userChoiceIdx];
+
         if (document.getElementById('modeToggle').checked) {
-            const q = selectedQuestions[qIdx];
-            const labels = ['A', 'B', 'C', 'D'];
-            const userChoiceIdx = q.options.indexOf(ans);
-            const userChoiceLabel = labels[userChoiceIdx];
-            
             if (userChoiceLabel === q.answer) {
-                aiSpeak("Chính xác! " + q.explanation);
+                aiSpeak("Chính xác. " + q.explanation);
                 showQuestion(qIdx);
             } else {
-                // Hiệu ứng rung khi chọn sai
                 const items = document.querySelectorAll('.option-item');
                 items.forEach(item => {
-                    if(item.innerText.includes(ans)) {
-                        item.classList.add('shake-anim');
-                    }
+                    if(item.innerText.includes(ans)) item.classList.add('shake-anim');
                 });
-                aiSpeak("Sai rồi. Đáp án đúng là " + q.answer + ". " + q.explanation);
-                setTimeout(() => { showQuestion(qIdx); }, 500);
+                aiSpeak("Chưa đúng. Đáp án đúng là " + q.answer + ". " + q.explanation);
+                setTimeout(() => { showQuestion(qIdx); }, 1500);
             }
         } else {
             showQuestion(qIdx);
@@ -396,33 +406,29 @@
             if(ans && labels[q.options.indexOf(ans.selected)] === q.answer) score++;
         });
 
-       // 1. Tính toán điểm hệ 10
         const score10 = ((score / 30) * 10).toFixed(1); 
         const status = score >= 25 ? "ĐẠT" : "KHÔNG ĐẠT";
 
-        // 2. Hiển thị thông tin cơ bản
         document.getElementById('res-name').innerText = nameValue;
         document.getElementById('res-dob').innerText = dobValue;
         document.getElementById('res-id').innerText = khoaThiValue;
         document.getElementById('res-score').innerText = score;
 
-        // 3. Hiển thị điểm hệ 10 chuẩn xác (Ví dụ: 8.3 điểm)
         const badge = document.getElementById('res-badge');
-        // Thêm chữ "điểm" phía sau con số
         badge.innerText = score10 + " ĐIỂM"; 
-        
-        // 4. Cập nhật màu sắc dựa trên trạng thái ĐẠT/KHÔNG ĐẠT
         badge.style.backgroundColor = status === "ĐẠT" ? "#28a745" : "#dc3545";
         document.getElementById('result-screen').style.display = 'flex';
 
-        // 5. Gửi dữ liệu về Google Sheets (giữ nguyên logic của thầy)
+        // AI thông báo kết quả
+        aiSpeak("Kết quả của bạn là " + score10 + " điểm. Trạng thái " + status);
+
         const formData = new URLSearchParams();
         formData.append('maThi', document.getElementById('maThi').value.trim().toUpperCase());
         formData.append('name', nameValue);
         formData.append('birthDate', dobValue);
         formData.append('khoaThi', khoaThiValue);
         formData.append('ngheName', document.getElementById('jobType').options[document.getElementById('jobType').selectedIndex].text);
-        formData.append('score', score + "/30 (" + score10 + " điểm)"); // Gửi kèm cả điểm hệ 10 về máy thầy
+        formData.append('score', score + "/30 (" + score10 + " điểm)");
         formData.append('status', status);
         formData.append('viPham', cheatCount);
 
@@ -435,8 +441,17 @@
         }, 1000);
     }
 
-    window.onblur = () => { if(!isSubmitted && selectedQuestions.length > 0) { cheatCount++; document.getElementById('warning-overlay').style.display = 'flex'; document.getElementById('cheat-count-msg').innerText = `Lần vi phạm: ${cheatCount} / 3`; if (cheatCount >= 3) submitQuiz(true); } };
-    window.onfocus = () => { if (cheatCount < 3) setTimeout(() => { document.getElementById('warning-overlay').style.display = 'none'; }, 500); };
+    window.onblur = () => { 
+        if(!isSubmitted && selectedQuestions.length > 0) { 
+            cheatCount++; 
+            document.getElementById('warning-overlay').style.display = 'flex'; 
+            document.getElementById('cheat-count-msg').innerText = `Lần vi phạm: ${cheatCount} / 3`; 
+            if (cheatCount >= 3) submitQuiz(true); 
+        } 
+    };
+    window.onfocus = () => { 
+        if (cheatCount < 3) setTimeout(() => { document.getElementById('warning-overlay').style.display = 'none'; }, 500); 
+    };
 </script>
 </body>
 </html>
