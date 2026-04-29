@@ -16,125 +16,105 @@
         * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
         body { background-color: var(--light-bg); font-family: 'Segoe UI', Arial, sans-serif; overflow-x: hidden; }
 
-        /* --- STYLE CHO NGƯỜI ẢO AI --- */
+        /* --- STYLE CHO TRỢ LÝ AI MỚI --- */
         #ai-container {
-            display: none; background: white; max-width: 1300px; margin: 10px auto; 
-            padding: 12px 20px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.05);
-            align-items: center; gap: 15px; border-left: 6px solid var(--btn-orange);
+            display: none; max-width: 1200px; margin: 20px auto; padding: 0 15px;
+            align-items: flex-end; gap: 20px; position: relative;
         }
-        .ai-avatar {
-            position: relative; width: 65px; height: 65px; 
-            border-radius: 50%; border: 2px solid #ddd; overflow: hidden; flex-shrink: 0;
-        }
-        .ai-avatar img { width: 100%; height: 100%; object-fit: cover; }
-        .speaking-waves {
-            display: none; position: absolute; bottom: 5px; left: 50%; transform: translateX(-50%);
-            gap: 3px; align-items: flex-end; height: 15px;
-        }
-        .wave { width: 3px; background: var(--btn-orange); border-radius: 3px; animation: wave-anim 0.5s infinite ease-in-out; }
-        @keyframes wave-anim { 0%, 100% { height: 5px; } 50% { height: 15px; } }
 
-        /* Hiệu ứng rung lắc khi chọn sai */
+        .ai-avatar-wrapper { flex-shrink: 0; z-index: 10; }
+
+        #ai-character {
+            height: 300px; width: auto; display: block;
+            filter: drop-shadow(5px 5px 15px rgba(0,0,0,0.2));
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            transform-origin: bottom center;
+        }
+
+        .ai-speech-bubble {
+            background: #ffffff; border: 3px solid var(--btn-orange);
+            border-radius: 25px; padding: 20px; position: relative;
+            margin-bottom: 60px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); flex-grow: 1;
+        }
+
+        .ai-speech-bubble::after {
+            content: ''; position: absolute; left: -24px; top: 50%;
+            transform: translateY(-50%); border: 12px solid transparent; border-right-color: var(--btn-orange);
+        }
+
+        .ai-title { font-weight: 900; color: var(--caee-blue); font-size: 14px; text-transform: uppercase; margin-bottom: 8px; display: flex; align-items: center; gap: 8px; }
+        
+        .speaking-dot { width: 8px; height: 8px; background-color: var(--danger); border-radius: 50%; display: none; animation: blink 1s infinite; }
+        @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0.3; } 100% { opacity: 1; } }
+
+        /* --- HIỆU ỨNG RUNG KHI CHỌN SAI --- */
         @keyframes shake {
             0%, 100% { transform: translateX(0); }
             25% { transform: translateX(-8px); }
             50% { transform: translateX(8px); }
             75% { transform: translateX(-4px); }
         }
-        .shake-anim {
-            animation: shake 0.4s cubic-bezier(.36,.07,.19,.97) both;
-            border-color: var(--danger) !important;
-            box-shadow: 0 0 15px rgba(220, 53, 69, 0.4) !important;
-        }
+        .shake-anim { animation: shake 0.4s both; border-color: var(--danger) !important; }
 
-        #warning-overlay {
-            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(220, 53, 69, 0.85); backdrop-filter: blur(8px);
-            color: white; z-index: 10000;
-            flex-direction: column; justify-content: center; align-items: center; text-align: center;
-        }
-        .warning-box { padding: 30px; border-radius: 20px; }
-        .warning-icon { font-size: 5rem; margin-bottom: 15px; animation: pulse 1.5s infinite; }
-        .warning-title { font-size: 2.2rem; font-weight: 900; text-transform: uppercase; margin-bottom: 10px; letter-spacing: 1px; }
-        .warning-text { font-size: 1.3rem; opacity: 0.95; margin-bottom: 20px; }
-        #cheat-count-msg { font-weight: bold; background: rgba(0,0,0,0.3); padding: 8px 20px; border-radius: 50px; font-size: 1.1rem; }
-        
-        @keyframes pulse {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.1); }
-            100% { transform: scale(1); }
-        }
-
+        /* --- HEADER & NAVIGATION --- */
         .caee-header {
             background: var(--header-blue); color: white; padding: 10px 20px;
             display: none; justify-content: center; align-items: center;
-            position: fixed; top: 0; width: 100%; z-index: 1000; 
-            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
-            transition: transform 0.5s ease-in-out;
+            position: fixed; top: 0; width: 100%; z-index: 1000; box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+            transition: transform 0.5s ease;
         }
         .header-hidden { transform: translateY(-100%); }
 
         .timer-floating {
-            position: fixed; top: 20px; right: 20px;
-            background: rgba(255, 51, 51, 0.15); 
-            backdrop-filter: blur(10px);
-            color: #ff3333; padding: 12px 25px;
-            border-radius: 50px;
-            font-weight: 900; font-size: 1.4rem;
+            position: fixed; top: 20px; right: 20px; background: rgba(255, 51, 51, 0.1); 
+            backdrop-filter: blur(10px); color: #ff3333; padding: 10px 20px;
+            border-radius: 50px; font-weight: 900; font-size: 1.4rem; z-index: 2000; display: none;
             border: 2px solid rgba(255, 51, 51, 0.3);
-            z-index: 2000; display: none;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
         }
-        #start-screen { min-height: 80vh; display: flex; justify-content: center; align-items: center; }
-        .welcome-container { background: white; width: 95%; max-width: 450px; border-radius: 15px; padding: 30px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
-        .form-control { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ddd; border-radius: 8px; font-size: 1rem; }
-        .btn-start { background: var(--success); color: white; border: none; width: 100%; padding: 15px; border-radius: 12px; font-weight: bold; cursor: pointer; font-size: 1.1rem; }
-        
+
+        #start-screen { min-height: 90vh; display: flex; justify-content: center; align-items: center; }
+        .welcome-container { background: white; width: 95%; max-width: 450px; border-radius: 20px; padding: 30px; box-shadow: 0 15px 35px rgba(0,0,0,0.1); }
+        .form-control { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ddd; border-radius: 10px; font-size: 1rem; }
+        .btn-start { background: var(--success); color: white; border: none; width: 100%; padding: 15px; border-radius: 12px; font-weight: bold; cursor: pointer; font-size: 1.1rem; transition: 0.3s; }
+        .btn-start:hover { filter: brightness(1.1); transform: translateY(-2px); }
+
         #quiz-screen { padding: 20px; display: none; grid-template-columns: 1fr 320px; gap: 20px; max-width: 1300px; margin: auto; padding-top: 100px; }
-        #quiz-content { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); min-height: 400px; }
-        
+        #quiz-content { background: white; padding: 30px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+
         .option-item {
-            border: 2px solid #eee; border-radius: 8px; padding: 18px; margin-bottom: 12px;
-            cursor: pointer; transition: all 0.3s ease; font-weight: 500; display: flex; align-items: center;
+            border: 2px solid #eee; border-radius: 10px; padding: 18px; margin-bottom: 12px;
+            cursor: pointer; transition: 0.2s; font-weight: 500; display: flex; align-items: center;
         }
-        .option-item:hover:not(.disabled) { border-color: var(--btn-blue); background: #f0f7ff; }
-        
-        .option-item.selected { 
-            background: #fff; 
-            border-color: #00e5ff; 
-            color: #003399;
-            box-shadow: 0 0 15px rgba(0, 229, 255, 0.6), inset 0 0 10px rgba(0, 229, 255, 0.2);
-            transform: scale(1.01);
-        }
-        
-        .option-item.correct { background: #d4edda !important; border-color: #28a745 !important; box-shadow: 0 0 15px rgba(40, 167, 69, 0.5); }
+        .option-item.selected { border-color: #00e5ff; background: #f0fdff; box-shadow: 0 0 10px rgba(0,229,255,0.2); }
+        .option-item.correct { background: #d4edda !important; border-color: #28a745 !important; }
         .option-item.wrong { background: #f8d7da !important; border-color: #dc3545 !important; }
 
-        #result-screen { display: none; position: fixed; top:0; left:0; width:100%; height:100%; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); z-index: 9999; justify-content: center; align-items: center; padding: 20px; }
-        .result-card { background: white; width: 100%; max-width: 450px; border-radius: 24px; padding: 30px; text-align: center; box-shadow: 0 20px 40px rgba(0,0,0,0.2); }
-        .score-circle { width: 110px; height: 110px; border-radius: 50%; border: 6px solid #eee; margin: 15px auto; display: flex; flex-direction: column; justify-content: center; font-size: 2rem; font-weight:bold; color: var(--header-blue); }
-        .status-badge { display: inline-block; padding: 8px 25px; border-radius: 50px; color: white; font-weight: bold; margin-bottom: 20px; }
-        .notice-text { background: #fff3cd; color: #856404; padding: 15px; border-radius: 12px; font-weight: bold; font-size: 0.9rem; line-height: 1.4; text-align: center; }
-        .q-image-box img { max-width: 100%; height: auto; border-radius: 8px; margin: 10px 0; }
+        #warning-overlay {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(220, 53, 69, 0.9); z-index: 10000; color: white;
+            flex-direction: column; justify-content: center; align-items: center; text-align: center;
+        }
 
-        @media (max-width: 900px) { #quiz-screen { grid-template-columns: 1fr; padding-top: 80px; } .timer-floating {top: 15px !important; right: 10px; font-size: 1.1rem; padding: 8px 15px; } }
+        #result-screen { display: none; position: fixed; top:0; left:0; width:100%; height:100%; background: linear-gradient(135deg, #003399 0%, #001a4d 100%); z-index: 9999; justify-content: center; align-items: center; }
+        .result-card { background: white; width: 90%; max-width: 450px; border-radius: 30px; padding: 40px; text-align: center; }
+        .score-circle { width: 120px; height: 120px; border-radius: 50%; border: 8px solid #eee; margin: 20px auto; display: flex; flex-direction: column; justify-content: center; font-size: 2.5rem; font-weight: 900; color: var(--caee-blue); }
+
+        @media (max-width: 900px) { #quiz-screen { grid-template-columns: 1fr; } #ai-character { height: 220px; } .ai-speech-bubble { margin-bottom: 30px; } }
     </style>
 </head>
 <body oncontextmenu="return false">
 
     <div id="warning-overlay">
-        <div class="warning-box">
-            <div class="warning-icon">⚠️</div>
-            <div class="warning-title">PHÁT HIỆN GIAN LẬN!</div>
-            <div class="warning-text">Vui lòng quay lại màn hình thi ngay lập tức.</div>
-            <div id="cheat-count-msg"></div>
-        </div>
+        <h1 style="font-size: 4rem;">⚠️</h1>
+        <h2>CẢNH BÁO GIAN LẬN</h2>
+        <p>Hệ thống đã ghi nhận bạn rời khỏi màn hình thi.</p>
+        <p id="cheat-count-msg" style="background: rgba(0,0,0,0.2); padding: 10px 20px; border-radius: 50px; margin-top: 15px;"></p>
     </div>
 
     <div class="caee-header" id="caee-header">
         <div style="text-align: center;">
             <div style="font-weight: 900; font-size: 14px;">TRƯỜNG CAO ĐẲNG CƠ ĐIỆN NÔNG NGHIỆP VÀ MÔI TRƯỜNG</div>
-            <div id="job-display-header" style="font-weight: bold; font-size: 14px; color: #ffd700;">ĐANG TẢI...</div>
+            <div id="job-display-header" style="font-weight: bold; font-size: 14px; color: #ffd700;">---</div>
             <div style="font-size: 13px;">HỌC VIÊN: <span id="display-name" style="font-weight: bold;">---</span></div>
         </div>
     </div>
@@ -143,96 +123,110 @@
 
     <div id="start-screen">
         <div class="welcome-container">
-            <div style="text-align: center; margin-bottom: 20px;">
-                <div style="font-size: 15px; color: #1a73e8; font-weight: bold;">TRƯỜNG CĐ CƠ ĐIỆN NÔNG NGHIỆP VÀ MÔI TRƯỜNG</div>
-                <div style="font-size: 15px; color: #d32f2f; font-weight: 800; margin-top: 5px; text-transform: uppercase;">KHOA MÁY THI CÔNG</div>
+            <div style="text-align: center; margin-bottom: 25px;">
+                <h3 style="color: var(--caee-blue); font-size: 1rem;">CAO ĐẲNG CƠ ĐIỆN NÔNG NGHIỆP & MT</h3>
+                <h2 style="color: var(--danger); font-weight: 900; letter-spacing: 1px;">KHOA MÁY THI CÔNG</h2>
             </div>
+            
             <select id="jobType" class="form-control" style="font-weight: bold;" onchange="preloadQuestions()">
                 <option value="1538604642">VẬN HÀNH XE NÂNG HÀNG</option>
                 <option value="798209567">VẬN HÀNH CẦN TRỤC</option>
                 <option value="1969781180">VẬN HÀNH CẦU TRỤC</option>
             </select>
+            
             <input type="text" id="studentName" placeholder="HỌ VÀ TÊN HỌC VIÊN" class="form-control" style="text-transform: uppercase;">
-            <input type="text" id="studentDOB" placeholder="Ngày/tháng/năm sinh" class="form-control">
-            <div style="display: flex; gap: 10px; margin-bottom: 10px;">
-                <input type="text" id="khoaThi" value="Tháng 4/2026" class="form-control" style="flex: 1.5; background: #eee; font-weight: bold;" readonly>
+            <input type="text" id="studentDOB" placeholder="Ngày/Tháng/Năm sinh" class="form-control">
+            
+            <div style="display: flex; gap: 10px;">
+                <input type="text" id="khoaThi" value="Tháng 4/2026" class="form-control" style="flex: 1.5; background: #f9f9f9;" readonly>
                 <input type="password" id="maThi" placeholder="Mã thi" class="form-control" style="flex: 1;">
             </div>
-            <div style="display:flex; align-items:center; margin: 15px 0; justify-content: center; gap:8px;">
-                <input type="checkbox" id="modeToggle" style="width:18px; height:18px;">
-                <label for="modeToggle" style="cursor:pointer; font-weight: 600;">Chế độ Ôn tập (Có trợ lý AI)</label>
+
+            <div style="display:flex; align-items:center; margin: 15px 0; justify-content: center; gap:10px; background: #f0f7ff; padding: 10px; border-radius: 10px;">
+                <input type="checkbox" id="modeToggle" style="width:20px; height:20px; cursor: pointer;">
+                <label for="modeToggle" style="cursor:pointer; font-weight: 700; color: var(--caee-blue);">Chế độ Ôn tập (Có trợ lý AI)</label>
             </div>
-            <button class="btn-start" id="btnStart" onclick="validateAndStart()">VÀO THI NGAY ➔</button>
+
+            <button class="btn-start" id="btnStart" onclick="validateAndStart()">BẮT ĐẦU SÁT HẠCH ➔</button>
         </div>
     </div>
 
     <div id="ai-container">
-        <div class="ai-avatar">
-            <img src="https://raw.githubusercontent.com/thayhoan/thi-xe-nang/main/images/ai-safety.png" alt="AI Assistant" onerror="this.src='https://cdn-icons-png.flaticon.com/512/1904/1904560.png'">
-            <div class="speaking-waves" id="ai-waves">
-                <div class="wave" style="animation-delay: 0s"></div>
-                <div class="wave" style="animation-delay: 0.1s"></div>
-                <div class="wave" style="animation-delay: 0.2s"></div>
-            </div>
+        <div class="ai-avatar-wrapper">
+            <img src="image_c4c6f4.png" id="ai-character" alt="AI Assistant">
         </div>
-        <div>
-            <div style="font-weight: bold; color: var(--caee-blue); font-size: 15px;">Trợ lý Sát hạch AI</div>
-            <div id="ai-status" style="font-size: 13px; color: #666;">Sẵn sàng hỗ trợ học viên...</div>
+        <div class="ai-speech-bubble">
+            <div class="ai-title">
+                <span class="speaking-dot" id="speak-indicator"></span>
+                Trợ lý Sát hạch CAEE
+            </div>
+            <div id="ai-status">Đang đợi học viên vào phòng thi...</div>
         </div>
     </div>
 
     <div id="quiz-screen">
         <div id="quiz-content"></div>
         <div class="sidebar-right">
-            <div style="background:white; padding:20px; border-radius:12px; box-shadow:0 4px 15px rgba(0,0,0,0.05);">
-                <h4 style="margin-bottom:15px; text-align:center;">SƠ ĐỒ CÂU HỎI</h4>
+            <div style="background:white; padding:25px; border-radius:15px; box-shadow:0 4px 15px rgba(0,0,0,0.05);">
+                <h4 style="margin-bottom:15px; text-align:center; color: #666;">DANH SÁCH CÂU HỎI</h4>
                 <div id="nav-grid" style="display:grid; grid-template-columns: repeat(5, 1fr); gap:8px;"></div>
-                <button id="submitBtn" class="btn-start" style="margin-top:20px; background-color: var(--caee-blue);" onclick="submitQuiz()">NỘP BÀI</button>
+                <button class="btn-start" style="margin-top:25px; background: var(--caee-blue);" onclick="submitQuiz()">NỘP BÀI</button>
             </div>
         </div>
     </div>
 
     <div id="result-screen">
         <div class="result-card">
-            <div style="font-size: 1.5rem; font-weight: bold; color: var(--caee-blue); margin-bottom: 20px;">KẾT QUẢ THI</div>
-            <div style="margin-bottom: 20px; font-size: 1.1rem; line-height: 1.6; text-align: center;">
-                Học viên: <b id="res-name" style="color: var(--caee-blue); text-transform: uppercase;">---</b><br>
-                Ngày sinh: <b id="res-dob">---</b><br>
-                Khóa thi: <b id="res-id">---</b>
+            <h2 style="color: var(--caee-blue);">KẾT QUẢ SÁT HẠCH</h2>
+            <div style="margin: 20px 0; font-size: 1.1rem; line-height: 1.6;">
+                <b id="res-name" style="text-transform: uppercase;">---</b><br>
+                Ngày sinh: <span id="res-dob">---</span>
             </div>
             <div class="score-circle">
                 <span id="res-score">0</span>
-                <small style="font-size: 0.8rem; color: #666; font-weight: normal;">/ 30 câu</small>
+                <small style="font-size: 0.9rem; font-weight: normal; color: #888;">/30 câu</small>
             </div>
-            <div id="res-badge" class="status-badge">---</div>
-            <div class="notice-text">
-                KẾT QUẢ NÀY ĐƯỢC NHÀ TRƯỜNG LƯU LẠI VÀ DÙNG ĐỂ XÉT CẤP CHỨNG CHỈ SƠ CẤP NGHỀ.
-            </div>
-            <p style="margin-top: 25px; color: #666; font-size: 0.85rem;">Hệ thống tự đóng sau <span id="countdown">15</span> giây...</p>
+            <div id="res-badge" style="padding: 10px 30px; border-radius: 50px; color: white; font-weight: bold; display: inline-block; margin-bottom: 20px;">---</div>
+            <p style="color: #666; font-size: 0.9rem;">Hệ thống sẽ tự động đóng sau <span id="countdown">15</span> giây.</p>
         </div>
     </div>
 
 <script>
     const BASE_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTD6ZzPWBa0HG24Av-JimMPQg3HTJklLOk89QogsshduBPsvz4xW0Qni82sRJQjuhqxr2E0OLMira03/pub?output=csv&gid=";
-    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwPZcfmY2PerVxTKwq0w_EMCx1bsnDKFT4yc9lHw_GhJMXJuuNcOl5jmO0kr92B_Kkw/exec";
+    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzL3cG8POLKTd9xd5FUbOdiD7ZEmuHIkyrSBrnruzonkuD13ldguctoApghtGwAQiSZ1w/exec";
     
     let allQuestions = [], selectedQuestions = [], studentAnswers = [];
     let currentQuestionIndex = 0, timeLeft = 1200, timerInterval, isSubmitted = false, cheatCount = 0;
 
-    const synth = window.speechSynthesis;
+    // --- LOGIC GIỌNG NÓI & NHÂN VẬT ---
     function aiSpeak(text) {
+        if (!text) return;
+        const synth = window.speechSynthesis;
         synth.cancel();
+
         const utter = new SpeechSynthesisUtterance(text);
         utter.lang = 'vi-VN';
-        utter.rate = 1.1; // Tốc độ vừa phải để học viên nghe rõ
-        
+        utter.rate = 1.0;
+
+        const charImg = document.getElementById('ai-character');
+        const dot = document.getElementById('speak-indicator');
+        const statusDiv = document.getElementById('ai-status');
+
         utter.onstart = () => {
-            document.getElementById('ai-waves').style.display = 'flex';
-            document.getElementById('ai-status').innerText = 'Đang thuyết minh...';
+            if(dot) dot.style.display = 'inline-block';
+            if(statusDiv) statusDiv.innerText = text;
+            if(charImg) {
+                charImg.style.transform = "scale(1.08) translateY(-10px)";
+                charImg.style.filter = "drop-shadow(0px 10px 20px rgba(255, 102, 0, 0.4))";
+            }
         };
+
         utter.onend = () => {
-            document.getElementById('ai-waves').style.display = 'none';
-            document.getElementById('ai-status').innerText = 'Sẵn sàng.';
+            if(dot) dot.style.display = 'none';
+            if(charImg) {
+                charImg.style.transform = "scale(1) translateY(0)";
+                charImg.style.filter = "drop-shadow(5px 5px 15px rgba(0,0,0,0.2))";
+            }
         };
         synth.speak(utter);
     }
@@ -248,10 +242,9 @@
                     question: i.CauHoi, 
                     options: [i.A, i.B, i.C, i.D].filter(o => o),
                     answer: i.DapAnDung ? i.DapAnDung.trim().toUpperCase() : "",
-                    explanation: i.Giaithich || "Thực hiện đúng quy trình an toàn.",
-                    image: i["HINH ANH"] || "" 
+                    explanation: i.Giaithich || "Thực hiện quy trình an toàn máy thi công.",
+                    image: i["HINH ANH"] || ""
                 }));
-                console.log("Đã tải " + allQuestions.length + " câu hỏi.");
             }
         });
     }
@@ -260,28 +253,26 @@
         const maThi = document.getElementById('maThi').value.trim();
         const name = document.getElementById('studentName').value.trim();
         const dob = document.getElementById('studentDOB').value.trim();
-        const rawNghe = document.getElementById('jobType').options[document.getElementById('jobType').selectedIndex].text;
         const isOnTap = document.getElementById('modeToggle').checked;
-        const ngheFull = "NGHỀ: " + rawNghe + (isOnTap ? " (ÔN TẬP)" : " (THI)");
+        const rawNghe = document.getElementById('jobType').options[document.getElementById('jobType').selectedIndex].text;
+        const fullNghe = "NGHỀ: " + rawNghe + (isOnTap ? " (ÔN TẬP)" : " (THI)");
 
-        if(!name || !maThi || !dob) return alert("Vui lòng nhập đầy đủ thông tin!");
+        if(!name || !maThi || !dob) return alert("Học viên vui lòng điền đầy đủ thông tin!");
         
         const btn = document.getElementById('btnStart');
-        btn.disabled = true; btn.innerText = "ĐANG KIỂM TRA...";
+        btn.disabled = true; btn.innerText = "ĐANG XÁC MINH...";
 
         try {
-            const res = await fetch(`${WEB_APP_URL}?action=checkCode&code=${encodeURIComponent(maThi)}&name=${encodeURIComponent(name)}&ngheName=${encodeURIComponent(ngheFull)}`);
+            const res = await fetch(`${WEB_APP_URL}?action=checkCode&code=${encodeURIComponent(maThi)}&name=${encodeURIComponent(name)}&ngheName=${encodeURIComponent(fullNghe)}`);
             const result = await res.json();
             if(result.isValid) startQuiz();
-            else { alert(result.message || "Mã thi không đúng!"); btn.disabled = false; btn.innerText = "VÀO THI NGAY ➔"; }
+            else { alert(result.message); btn.disabled = false; btn.innerText = "BẮT ĐẦU SÁT HẠCH ➔"; }
         } catch(e) { 
-            alert("Lỗi kết nối Server! Vui lòng kiểm tra lại mã thi."); 
-            btn.disabled = false; btn.innerText = "VÀO THI NGAY ➔"; 
+            alert("Lỗi máy chủ! Thử lại sau."); btn.disabled = false; btn.innerText = "BẮT ĐẦU SÁT HẠCH ➔";
         }
     }
 
     function startQuiz() {
-        if(allQuestions.length === 0) return alert("Vui lòng đợi dữ liệu tải...");
         selectedQuestions = allQuestions.sort(() => 0.5 - Math.random()).slice(0, 30);
         document.getElementById('display-name').innerText = document.getElementById('studentName').value.toUpperCase();
         document.getElementById('job-display-header').innerText = document.getElementById('jobType').options[document.getElementById('jobType').selectedIndex].text;
@@ -292,13 +283,11 @@
         document.getElementById('timer').style.display = 'block';
         document.getElementById('quiz-screen').style.display = 'grid';
         
-        setTimeout(() => {
-            document.getElementById('caee-header').classList.add('header-hidden');
-        }, 10000);
+        setTimeout(() => document.getElementById('caee-header').classList.add('header-hidden'), 8000);
 
         showQuestion(0);
         startTimer();
-        aiSpeak("Chào mừng học viên " + document.getElementById('studentName').value + ". Chúc bạn hoàn thành tốt bài sát hạch.");
+        aiSpeak("Chào mừng học viên " + document.getElementById('studentName').value + ". Mời bạn bắt đầu bài sát hạch.");
     }
 
     function showQuestion(idx) {
@@ -309,7 +298,7 @@
         const labels = ['A', 'B', 'C', 'D'];
 
         let html = `<h3>Câu ${idx + 1}: ${q.question}</h3>`;
-        if(q.image) html += `<div class="q-image-box"><img src="${q.image}"></div>`;
+        if(q.image) html += `<div style="text-align:center"><img src="${q.image}" style="max-width:100%; border-radius:10px; margin:15px 0;"></div>`;
 
         q.options.forEach((opt, i) => {
             let cls = "";
@@ -321,22 +310,21 @@
             html += `<div class="option-item ${cls}" onclick="selectAns(${idx}, '${opt.replace(/'/g, "\\'")}')"><b>${labels[i]}.</b>&nbsp;${opt}</div>`;
         });
 
-        if(isPractice && stored) html += `<div style="background:#fff3cd; padding:15px; border-radius:8px; margin-top:10px; font-size:14px; border-left: 5px solid #ffc107;"><b>Giải thích:</b> ${q.explanation}</div>`;
+        if(isPractice && stored) {
+            html += `<div style="background:#fff3cd; padding:15px; border-radius:10px; margin-top:15px; border-left:5px solid var(--btn-orange);"><b>Giải thích:</b> ${q.explanation}</div>`;
+        }
         
-        html += `<div style="display:flex; justify-content:space-between; margin-top:15px; gap:10px;">
-                    <button class="btn-start" style="padding:10px; background:var(--btn-blue);" onclick="showQuestion(${idx-1})" ${idx===0?'disabled':''}>Lùi lại</button>
-                    <button class="btn-start" style="padding:10px; background:var(--btn-blue);" onclick="showQuestion(${idx+1})" ${idx===29?'disabled':''}>Tiếp theo</button>
+        html += `<div style="display:flex; justify-content:space-between; margin-top:20px; gap:10px;">
+                    <button class="btn-start" style="background:var(--btn-blue);" onclick="showQuestion(${idx-1})" ${idx===0?'disabled':''}>Trở về</button>
+                    <button class="btn-start" style="background:var(--btn-blue);" onclick="showQuestion(${idx+1})" ${idx===29?'disabled':''}>Tiếp theo</button>
                  </div>`;
         
         document.getElementById('quiz-content').innerHTML = html;
         renderGrid();
 
-        // CẢI TIẾN: AI đọc cả câu hỏi và đáp án nếu chưa làm
         if (!stored) {
-            let textToRead = "Câu hỏi " + (idx+1) + ": " + q.question + ". ";
-            q.options.forEach((opt, i) => {
-                textToRead += "Đáp án " + labels[i] + ": " + opt + ". ";
-            });
+            let textToRead = `Câu số ${idx + 1}. ${q.question}. `;
+            q.options.forEach((opt, i) => textToRead += `Đáp án ${labels[i]}. ${opt}. `);
             aiSpeak(textToRead);
         }
     }
@@ -349,20 +337,17 @@
         
         const q = selectedQuestions[qIdx];
         const labels = ['A', 'B', 'C', 'D'];
-        const userChoiceIdx = q.options.indexOf(ans);
-        const userChoiceLabel = labels[userChoiceIdx];
+        const userChoiceLabel = labels[q.options.indexOf(ans)];
 
         if (document.getElementById('modeToggle').checked) {
             if (userChoiceLabel === q.answer) {
-                aiSpeak("Chính xác. " + q.explanation);
+                aiSpeak("Chính xác! " + q.explanation);
                 showQuestion(qIdx);
             } else {
                 const items = document.querySelectorAll('.option-item');
-                items.forEach(item => {
-                    if(item.innerText.includes(ans)) item.classList.add('shake-anim');
-                });
-                aiSpeak("Chưa đúng. Đáp án đúng là " + q.answer + ". " + q.explanation);
-                setTimeout(() => { showQuestion(qIdx); }, 1500);
+                items.forEach(item => { if(item.innerText.includes(ans)) item.classList.add('shake-anim'); });
+                aiSpeak("Chưa chính xác. Đáp án đúng là " + q.answer + ". " + q.explanation);
+                setTimeout(() => showQuestion(qIdx), 1500);
             }
         } else {
             showQuestion(qIdx);
@@ -376,7 +361,7 @@
             const hasAns = studentAnswers.some(a => a.qIndex === i);
             const active = i === currentQuestionIndex ? 'border:3px solid var(--btn-orange);' : '';
             const bg = hasAns ? 'background:var(--caee-blue); color:white;' : 'background:white;';
-            grid.innerHTML += `<div onclick="showQuestion(${i})" style="height:35px; display:flex; justify-content:center; align-items:center; border-radius:5px; cursor:pointer; font-size:13px; font-weight:bold; ${bg} ${active}">${i+1}</div>`;
+            grid.innerHTML += `<div onclick="showQuestion(${i})" style="height:35px; display:flex; justify-content:center; align-items:center; border-radius:8px; cursor:pointer; font-size:13px; font-weight:bold; ${bg} ${active}">${i+1}</div>`;
         });
     }
 
@@ -390,15 +375,11 @@
     }
 
     async function submitQuiz(auto = false) {
-        if(!auto && !confirm("Bạn có chắc chắn muốn nộp bài?")) return;
+        if(!auto && !confirm("Bạn có chắc chắn muốn kết thúc bài thi?")) return;
         clearInterval(timerInterval); 
-        synth.cancel();
+        window.speechSynthesis.cancel();
         isSubmitted = true;
         
-        const nameValue = document.getElementById('studentName').value.toUpperCase().trim();
-        const dobValue = document.getElementById('studentDOB').value.trim();
-        const khoaThiValue = document.getElementById('khoaThi').value.trim();
-
         let score = 0;
         selectedQuestions.forEach((q, i) => {
             const ans = studentAnswers.find(a => a.qIndex === i);
@@ -409,51 +390,43 @@
         const score10 = ((score / 30) * 10).toFixed(1); 
         const status = score >= 25 ? "ĐẠT" : "KHÔNG ĐẠT";
 
-        document.getElementById('res-name').innerText = nameValue;
-        document.getElementById('res-dob').innerText = dobValue;
-        document.getElementById('res-id').innerText = khoaThiValue;
+        document.getElementById('res-name').innerText = document.getElementById('studentName').value.toUpperCase();
+        document.getElementById('res-dob').innerText = document.getElementById('studentDOB').value;
         document.getElementById('res-score').innerText = score;
-
         const badge = document.getElementById('res-badge');
-        badge.innerText = score10 + " ĐIỂM"; 
+        badge.innerText = status + " (" + score10 + " ĐIỂM)";
         badge.style.backgroundColor = status === "ĐẠT" ? "#28a745" : "#dc3545";
+        
         document.getElementById('result-screen').style.display = 'flex';
+        aiSpeak("Học viên " + document.getElementById('studentName').value + " đã hoàn thành bài thi với kết quả " + status + ". Số điểm đạt được là " + score10 + " điểm.");
 
-        // AI thông báo kết quả
-        aiSpeak("Kết quả của bạn là " + score10 + " điểm. Trạng thái " + status);
-
+        // Gửi dữ liệu về Google Sheets
         const formData = new URLSearchParams();
         formData.append('maThi', document.getElementById('maThi').value.trim().toUpperCase());
-        formData.append('name', nameValue);
-        formData.append('birthDate', dobValue);
-        formData.append('khoaThi', khoaThiValue);
-       const rawNghe = document.getElementById('jobType').options[document.getElementById('jobType').selectedIndex].text;
-const modeSuffix = document.getElementById('modeToggle').checked ? " (ÔN TẬP)" : " (THI)";
-formData.append('ngheName', "NGHỀ: " + rawNghe + modeSuffix);
+        formData.append('name', document.getElementById('studentName').value.toUpperCase());
+        formData.append('birthDate', document.getElementById('studentDOB').value);
+        formData.append('khoaThi', document.getElementById('khoaThi').value);
         formData.append('score', score + "/30 (" + score10 + " điểm)");
         formData.append('status', status);
         formData.append('viPham', cheatCount);
-formData.append('mode', document.getElementById('modeToggle').checked ? "ON_TAP" : "THI");
+        formData.append('ngheName', document.getElementById('jobType').options[document.getElementById('jobType').selectedIndex].text + (document.getElementById('modeToggle').checked ? " (ÔN TẬP)" : " (THI)"));
+        formData.append('mode', document.getElementById('modeToggle').checked ? "ON_TAP" : "THI");
+
         fetch(WEB_APP_URL, { method: "POST", mode: "no-cors", body: formData });
 
         let c = 15;
-        const cdInterval = setInterval(() => { 
-            if(c > 0) { c--; document.getElementById('countdown').innerText = c; }
-            else { clearInterval(cdInterval); location.reload(); }
-        }, 1000);
+        setInterval(() => { if(c > 0) document.getElementById('countdown').innerText = --c; else location.reload(); }, 1000);
     }
 
     window.onblur = () => { 
         if(!isSubmitted && selectedQuestions.length > 0) { 
             cheatCount++; 
             document.getElementById('warning-overlay').style.display = 'flex'; 
-            document.getElementById('cheat-count-msg').innerText = `Lần vi phạm: ${cheatCount} / 3`; 
+            document.getElementById('cheat-count-msg').innerText = `Số lần vi phạm: ${cheatCount} / 3`; 
             if (cheatCount >= 3) submitQuiz(true); 
         } 
     };
-    window.onfocus = () => { 
-        if (cheatCount < 3) setTimeout(() => { document.getElementById('warning-overlay').style.display = 'none'; }, 500); 
-    };
+    window.onfocus = () => { if (cheatCount < 3) setTimeout(() => document.getElementById('warning-overlay').style.display = 'none', 500); };
 </script>
 </body>
 </html>
